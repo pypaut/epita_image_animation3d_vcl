@@ -1,4 +1,3 @@
-
 #include "default.hpp"
 
 #include <random>
@@ -60,6 +59,31 @@ void scene_model::setup_data(std::map<std::string, GLuint>& shaders, scene_struc
     gui.show_frame_worldspace = true;
     gui.show_frame_camera = true;
 
+    // Sphere
+    sphere = mesh_primitive_sphere(); // Create a default sphere model
+    sphere.shader = shaders["mesh"];  // Associate its default shader
+
+    // Cylinder
+    cylinder = mesh_drawable(
+            mesh_primitive_cylinder(0.05f, { 0,0,0 }, { 0,0.2f,0 }, 20, 20)
+    );
+    cylinder.uniform.color = { 0.2f,0,0 };
+    cylinder.shader = shaders["mesh"];  // Default shader for the cylinder
+
+    // Cone
+    cone = mesh_primitive_cone(0.1f,{0,0,0},{0,0.2f,0});
+    cone.uniform.color = { 0,0.4f,0 };
+    const int N_cone = 40;
+    positions.resize(N_cone);
+    positions2.resize(N_cone);
+    for(int k=0; k<N_cone; ++k)
+    {
+        float x = vcl::rand_interval(-2,2);
+        float z = vcl::rand_interval(-2,2);
+
+        positions[k] = {x,-0.9,z};
+        positions2[k] = {x,-1,z};
+    }
 }
 
 
@@ -95,45 +119,18 @@ void scene_model::frame_draw(std::map<std::string, GLuint>& shaders, scene_struc
     //   draw(objectName, camera [,optional: shaderID ]);
     draw(plane, scene.camera);
 
+    if (is_wireframe)
+        draw(sphere, scene.camera, shaders["wireframe"]);
 
+    const int N = positions.size();
+    for(int k=0; k<N; ++k)
+    {
+        cone.uniform.transform.translation = positions[k];
+        draw(cone, scene.camera, shaders["mesh"]);
 
-    // Display cylinder
-    // ********************************************* //
-
-    // The cylinder is rotated around the axis (1,0,0), by an angle = time/2
-    const vec3 axis_of_rotation = { 1,0,0 };
-    const float angle_of_rotation = time / 2.0f;
-    // Creation of the 3x3 rotation matrix
-    const mat3 rotation = rotation_from_axis_angle_mat3(axis_of_rotation, angle_of_rotation);
-
-    // Set translation and rotation parameters (send and used in shaders using uniform variables)
-    cylinder.uniform.transform.translation = { 1.5,0,0 };
-    cylinder.uniform.transform.rotation = rotation;
-
-    // Display of the cylinder
-    draw(cylinder, scene.camera);
-
-    // Meshes can also be displayed as wireframe using the specific shader
-    draw(cylinder, scene.camera, shaders["wireframe"]);
-
-
-    // Display cube
-    // ********************************************* //
-    cube.uniform.transform.rotation = rotation_from_axis_angle_mat3({ 0,1,0 }, std::sin(3 * time));
-    cube.uniform.transform.translation = { -1,0,0 };
-    draw(cube, scene.camera);
-
-
-    // Display curve
-    // ********************************************* //
-    curve.uniform.transform.translation = { 1.9f,0,0 };
-    curve.uniform.transform.rotation = rotation_from_axis_angle_mat3({ 0,0,1 }, time);
-    draw(curve, scene.camera);
-
-
-
-
-
+        cylinder.uniform.transform.translation = positions2[k];
+        draw(cylinder, scene.camera, shaders["mesh"]);
+    }
 }
 
 /** Update the visual GUI */
@@ -148,8 +145,9 @@ void scene_model::set_gui()
     if (stop)  timer.stop();
     if (start) timer.start();
 
+    ImGui::Checkbox("Wireframe", &is_wireframe);
+
 
 }
 
 #endif
-

@@ -7,7 +7,6 @@
 
 struct scene_model : scene_base
 {
-
     /** A part must define two functions that are called from the main function:
      * setup_data: called once to setup data before starting the animation loop
      * frame_draw: called at every displayed frame within the animation loop
@@ -49,10 +48,14 @@ struct scene_model : scene_base
     // Timer used for the animation
     vcl::timer_basic timer;
 
+    // Visual representation of a sphere
+    vcl::mesh_drawable sphere;
+    bool is_wireframe = false;
 
 
+    std::vector<vcl::vec3> positions;
+    std::vector<vcl::vec3> positions2;
+    vcl::mesh_drawable cone;
 };
 
 #endif
-
-
