@@ -12,11 +12,25 @@ using namespace vcl;
 void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_structure& , gui_structure& )
 {
     const float radius_body = 0.25f;
+    const float radius_head = 0.15f;
     const float radius_arm = 0.05f;
     const float length_arm = 0.2f;
 
     // The geometry of the body is a sphere
-    mesh_drawable body = mesh_drawable( mesh_primitive_sphere(radius_body, {0,0,0}, 40, 40));
+    mesh_drawable body = mesh_drawable(
+            mesh_primitive_sphere(radius_body, {0,0,0}, 40, 40)
+    );
+
+    // Geometry of the head
+    mesh_drawable head = mesh_drawable(
+            mesh_primitive_sphere(radius_head, {0,0,radius_body-0.08f}, 40, 40)
+    );
+
+    // Geometry of the beak : cone
+    mesh_drawable beak = mesh_drawable(
+            mesh_primitive_cone(0.1f, {0,0,0}, {0,0,0.2f})
+    );
+    beak.uniform.color = {0.5f, 0.45f, 0};
 
     // Geometry of the eyes: black spheres
     mesh_drawable eye = mesh_drawable(mesh_primitive_sphere(0.05f, {0,0,0}, 20, 20));
@@ -34,9 +48,15 @@ void scene_model::setup_data(std::map<std::string,GLuint>& shaders, scene_struct
     //   hierarchy.add(visual_element, element_name, parent_name, (opt)[translation, rotation])
     hierarchy.add(body, "body");
 
+    // Head
+    hierarchy.add(head, "head", "body", radius_body * vec3(0, 0, 1/1.5f));
+
     // Eyes positions are set with respect to some ratio of the
-    hierarchy.add(eye, "eye_left", "body" , radius_body * vec3( 1/3.0f, 1/2.0f, 1/1.5f));
-    hierarchy.add(eye, "eye_right", "body", radius_body * vec3(-1/3.0f, 1/2.0f, 1/1.5f));
+    hierarchy.add(eye, "eye_left", "head" , (radius_head + radius_body) * vec3( 1/3.0f, 1/2.0f, 1/1.5f));
+    hierarchy.add(eye, "eye_right", "head", (radius_head + radius_body) * vec3(-1/3.0f, 1/2.0f, 1/1.5f));
+
+    // Beak position
+    hierarchy.add(beak, "beak", "head", radius_body * vec3(0, 0, 1));
 
     // Set the left part of the body arm: shoulder-elbow-arm
     hierarchy.add(shoulder, "shoulder_left", "body", {-radius_body+0.05f,0,0}); // extremity of the spherical body
@@ -76,12 +96,12 @@ void scene_model::frame_draw(std::map<std::string,GLuint>& shaders, scene_struct
     /** *************************************************************  **/
 
     // The body oscillate along the z direction
-    hierarchy["body"].transform.translation = {0,0,0.2f*(1+std::sin(2*3.14f*t))};
+    hierarchy["body"].transform.translation = {0,0.2f*(1-std::sin(2*3.14f*t)),0};
 
     // Rotation of the shoulder around the y axis
-    mat3 const R_shoulder = rotation_from_axis_angle_mat3({0,1,0}, std::sin(2*3.14f*(t-0.4f)) );
+    mat3 const R_shoulder = rotation_from_axis_angle_mat3({0,0,1}, std::sin(2*3.14f*(t-0.4f)) );
     // Rotation of the arm around the y axis (delayed with respect to the shoulder)
-    mat3 const R_arm = rotation_from_axis_angle_mat3({0,1,0}, std::sin(2*3.14f*(t-0.6f)) );
+    mat3 const R_arm = rotation_from_axis_angle_mat3({0,0,1}, std::sin(2*3.14f*(t-0.6f)) );
     // Symmetry in the x-direction between the left/right parts
     mat3 const Symmetry = {-1,0,0, 0,1,0, 0,0,1};
 
