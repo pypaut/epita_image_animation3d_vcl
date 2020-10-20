@@ -48,7 +48,80 @@ void scene_model::compute_time_step(float dt)
     }
 
     // Collisions with cube
-    // ... to do
+    // vec3 n1 = vec3(0, 1, 0);
+    std::vector<vec3> normals = {
+        vec3( 0,  0, -1),  // Blue, z
+        vec3( 0, -1,  0),  // Green, y
+        vec3(-1,  0,  0),  // Red, x
+        vec3( 0,  0,  1),  // -Blue, -z
+        vec3( 0,  1,  0),  // -Green, -y
+        vec3( 1,  0,  0)   // -Red, -x
+    };
+
+    for (size_t i = 0; i < N; ++i) {
+        particle_structure& particle = particles[i];
+
+        // vec3 a = particle.p - vec3(
+        //         particle.p[0] * abs(n1[0]),
+        //         particle.p[1] * abs(n1[1]),
+        //         particle.p[2] * abs(n1[2])
+        // ) - n1; // Projection
+        // float detection = dot(particle.p - a, n1);
+
+        // if (detection <= particle.r) {
+        //     // Reset position
+        //     float d = sqrt(
+        //         pow(particle.p[0] - a[0], 2)
+        //         + pow(particle.p[1] - a[1], 2)
+        //         + pow(particle.p[2] - a[2], 2)
+        //     );
+        //     particle.p += (particle.r - d) * n1;
+
+        //     // Reset velocity
+        //     particle.v += n1;
+        // }
+
+        for (size_t k = 0; k < 6; ++k) {
+            vec3 n = normals[k];
+            vec3 a = particle.p - vec3(
+                    particle.p[0] * abs(n[0]),
+                    particle.p[1] * abs(n[1]),
+                    particle.p[2] * abs(n[2])
+            ) - n; // Projection
+
+            float detection = dot(particle.p - a, n);
+
+            if (k == 4) {
+                //std::cout << "PROJECTION: " << a << std::endl;
+                //std::cout << "DETECTION: " << detection << std::endl;
+                detection = -detection;
+            }
+            if (detection <= particle.r && detection >= 0) {
+                if (k == 4) {
+                    std::cout << "FLOOR" << std::endl;
+                    std::cout << "POS : " << particle.p << ", SPEED : " << particle.v << std::endl;
+                }
+
+                // Reset position
+                float d = sqrt(
+                    pow(particle.p[0] - a[0], 2)
+                    + pow(particle.p[1] - a[1], 2)
+                    + pow(particle.p[2] - a[2], 2)
+                );
+                particle.p += (particle.r - d) * n;  // Reset position
+        
+                // Reset velocity
+                particle.v += n * norm(particle.v) * 0.9;  // Reset velocity
+
+                if (k == 4) {
+                    std::cout << "NEW" << std::endl;
+                    std::cout << "POS : " << particle.p << ", SPEED : " << particle.v << std::endl;
+                }
+
+                
+            }
+        }
+    }
 
     // Collisions between spheres
     // ... to do
