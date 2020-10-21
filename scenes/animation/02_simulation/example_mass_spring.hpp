@@ -19,12 +19,16 @@ struct scene_model : scene_base
 
     particle_element pA;
     particle_element pB;
+    particle_element pC;
+
     float L0;
+    float L1;
 
 
     vcl::mesh_drawable sphere;      // Visual display of particles
     vcl::segments_drawable borders; // Visual display of borders
     vcl::segment_drawable_immediate_mode segment_drawer;
+
 
     vcl::timer_event timer;
 };

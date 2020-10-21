@@ -84,7 +84,7 @@ void scene_model::compute_time_step(float dt)
             ) - n; // Projection
             float detection = dot(particle.p - a, n);
 
-            if (detection <= particle.r && detection >= 0) {
+            if (detection <= particle.r) {
                 float d = norm(particle.p - a);
                 particle.p += (particle.r - d) * n;  // Reset position
                 particle.v += n * norm(particle.v) * 0.8;  // Reset velocity
