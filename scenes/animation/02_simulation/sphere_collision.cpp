@@ -58,9 +58,23 @@ void scene_model::compute_time_step(float dt)
     };
 
     for (size_t i = 0; i < N; ++i) {
-        // Collisions with cube
-        particle_structure& particle = particles[i];
+        particle_structure& particle = particles[i];  // Current particle
 
+        // Collisions between spheres
+        for (size_t j = 0; j < N; ++j) {
+            if (j == i) { continue; }
+            particle_structure& particle2 = particles[j];
+
+            float d = norm(particle.p - particle2.p);
+            if (d < 2 * particle.r) {  // Collision
+                vec3 dir = (particle2.p - particle.p) / d;
+                // if (dot(dir, ))
+                particle2.p += dir * (2*particle.r - d);  // Update position
+                particle2.v += dir * norm(particle.v) * 0.8;  // Update velocity
+            }
+        }
+
+        // Collisions with cube
         for (size_t k = 0; k < 6; ++k) {
             vec3 n = normals[k];
             vec3 a = particle.p - vec3(
@@ -73,12 +87,9 @@ void scene_model::compute_time_step(float dt)
             if (detection <= particle.r && detection >= 0) {
                 float d = norm(particle.p - a);
                 particle.p += (particle.r - d) * n;  // Reset position
-                particle.v += n * norm(particle.v) * 1;  // Reset velocity
+                particle.v += n * norm(particle.v) * 0.8;  // Reset velocity
             }
         }
-
-        // Collisions between spheres
-
     }
 }
 
