@@ -47,8 +47,7 @@ void scene_model::compute_time_step(float dt)
         p = p + dt * v;
     }
 
-    // Collisions with cube
-    // vec3 n1 = vec3(0, 1, 0);
+    // Cube normals
     std::vector<vec3> normals = {
         vec3( 0,  0, -1),  // Blue, z
         vec3( 0, -1,  0),  // Green, y
@@ -59,27 +58,8 @@ void scene_model::compute_time_step(float dt)
     };
 
     for (size_t i = 0; i < N; ++i) {
+        // Collisions with cube
         particle_structure& particle = particles[i];
-
-        // vec3 a = particle.p - vec3(
-        //         particle.p[0] * abs(n1[0]),
-        //         particle.p[1] * abs(n1[1]),
-        //         particle.p[2] * abs(n1[2])
-        // ) - n1; // Projection
-        // float detection = dot(particle.p - a, n1);
-
-        // if (detection <= particle.r) {
-        //     // Reset position
-        //     float d = sqrt(
-        //         pow(particle.p[0] - a[0], 2)
-        //         + pow(particle.p[1] - a[1], 2)
-        //         + pow(particle.p[2] - a[2], 2)
-        //     );
-        //     particle.p += (particle.r - d) * n1;
-
-        //     // Reset velocity
-        //     particle.v += n1;
-        // }
 
         for (size_t k = 0; k < 6; ++k) {
             vec3 n = normals[k];
@@ -88,44 +68,18 @@ void scene_model::compute_time_step(float dt)
                     particle.p[1] * abs(n[1]),
                     particle.p[2] * abs(n[2])
             ) - n; // Projection
-
             float detection = dot(particle.p - a, n);
 
-            if (k == 4) {
-                //std::cout << "PROJECTION: " << a << std::endl;
-                //std::cout << "DETECTION: " << detection << std::endl;
-                detection = -detection;
-            }
             if (detection <= particle.r && detection >= 0) {
-                if (k == 4) {
-                    std::cout << "FLOOR" << std::endl;
-                    std::cout << "POS : " << particle.p << ", SPEED : " << particle.v << std::endl;
-                }
-
-                // Reset position
-                float d = sqrt(
-                    pow(particle.p[0] - a[0], 2)
-                    + pow(particle.p[1] - a[1], 2)
-                    + pow(particle.p[2] - a[2], 2)
-                );
+                float d = norm(particle.p - a);
                 particle.p += (particle.r - d) * n;  // Reset position
-        
-                // Reset velocity
-                particle.v += n * norm(particle.v) * 0.9;  // Reset velocity
-
-                if (k == 4) {
-                    std::cout << "NEW" << std::endl;
-                    std::cout << "POS : " << particle.p << ", SPEED : " << particle.v << std::endl;
-                }
-
-                
+                particle.v += n * norm(particle.v) * 1;  // Reset velocity
             }
         }
+
+        // Collisions between spheres
+
     }
-
-    // Collisions between spheres
-    // ... to do
-
 }
 
 
@@ -134,7 +88,9 @@ void scene_model::create_new_particle()
     // Emission of new particle if needed
     timer.periodic_event_time_step = gui_scene.time_interval_new_sphere;
     const bool is_new_particle = timer.event;
-    static const std::vector<vec3> color_lut = {{1,0,0},{0,1,0},{0,0,1},{1,1,0},{1,0,1},{0,1,1}};
+    static const std::vector<vec3> color_lut = {
+        {1,0,0},{0,1,0},{0,0,1},{1,1,0},{1,0,1},{0,1,1}
+    };
 
     if( is_new_particle && gui_scene.add_sphere)
     {
